@@ -47,6 +47,7 @@ static cocos2d::Size smallResolutionSize = cocos2d::Size(480, 320);
 static cocos2d::Size mediumResolutionSize = cocos2d::Size(1024, 768);
 static cocos2d::Size largeResolutionSize = cocos2d::Size(2048, 1536);
 
+
 AppDelegate::AppDelegate()
 {
 }
@@ -81,11 +82,16 @@ bool AppDelegate::applicationDidFinishLaunching() {
     // initialize director
     auto director = Director::getInstance();
     auto glview = director->getOpenGLView();
+
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+    designResolutionSize = mediumResolutionSize;
+#endif
+
     if(!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
         glview = GLViewImpl::createWithRect("particle-editor", cocos2d::Rect(0, 0, mediumResolutionSize.width, mediumResolutionSize.height));
 #else
-        glview = GLViewImpl::create("MyCppGame");
+        glview = GLViewImpl::create("particle-editor");
 #endif
         director->setOpenGLView(glview);
     }

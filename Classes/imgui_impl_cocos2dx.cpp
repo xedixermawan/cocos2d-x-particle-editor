@@ -885,8 +885,18 @@ void ImGui_ImplCocos2dx_NewFrame()
     int w, h;
     int buffer_w, buffer_h;
 #ifdef CC_PLATFORM_PC
-    glfwGetWindowSize(g_Window, &w, &h);
-    glfwGetFramebufferSize(g_Window, &buffer_w, &buffer_h);
+    #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+        auto glview = cocos2d::Director::getInstance()->getOpenGLView();
+        const auto frameSize = glview->getFrameSize();
+        const auto designRes = glview->getDesignResolutionSize();
+        w = designRes.width;
+        h = designRes.height;
+        buffer_w = frameSize.width;
+        buffer_h = frameSize.height;
+    #else
+        glfwGetWindowSize(g_Window, &w, &h);
+        glfwGetFramebufferSize(g_Window, &buffer_w, &buffer_h);
+    #endif
 #else
 	auto glv = cocos2d::Director::getInstance()->getOpenGLView();
 	const auto frame_size = glv->getFrameSize();
