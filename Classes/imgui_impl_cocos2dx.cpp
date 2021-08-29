@@ -596,6 +596,7 @@ bool ImGui_ImplCocos2dx_Init(bool install_callbacks)
 	const auto glv_ = (cocos2d::GLViewImpl*)cocos2d::Director::getInstance()->getOpenGLView();
 	auto window = glv_->getWindow();
 	g_Window = window;
+    const auto frameSize = glv_->getDesignResolutionSize();
 #endif // CC_PLATFORM_PC
     g_Time = 0.0;
 
@@ -687,55 +688,56 @@ bool ImGui_ImplCocos2dx_Init(bool install_callbacks)
         g_PrevUserCallbackKey = glfwSetKeyCallback(window, ImGui_ImplCocos2dx_KeyCallback);
         g_PrevUserCallbackChar = glfwSetCharCallback(window, ImGui_ImplCocos2dx_CharCallback);
     }
-#else
-	auto e = cocos2d::EventListenerMouse::create();
-	e->onMouseDown = [](cocos2d::EventMouse* ev)
-	{
-		const auto b = (int)ev->getMouseButton();
-		if (0 <= b && b < 5)
-			g_MouseJustPressed[b] = true;
-	};
-	e->onMouseUp = [](cocos2d::EventMouse* ev)
-	{
-		const auto b = (int)ev->getMouseButton();
-		if (0 <= b && b < 5)
-			g_MouseJustPressed[b] = false;
-	};
-	e->onMouseMove = [](cocos2d::EventMouse* ev)
-	{
-		g_CursorPos.x = ev->getCursorX();
-		g_CursorPos.y = ev->getCursorY();
-	};
-	e->onMouseScroll = [](cocos2d::EventMouse* ev)
-	{
-		auto& _io = ImGui::GetIO();
-		_io.MouseWheelH += (float)ev->getScrollX();
-		_io.MouseWheel += (float)ev->getScrollY();
-	};
-	cocos2d::Director::getInstance()->getEventDispatcher()->addEventListenerWithFixedPriority(e, 1);
-	auto e2 = cocos2d::EventListenerKeyboard::create();
-	using KeyCode = cocos2d::EventKeyboard::KeyCode;
-	e2->onKeyPressed = [](auto k, auto ev)
-	{
-		auto& _io = ImGui::GetIO();
-		_io.KeysDown[(int)k] = true;
-		// Modifiers are not reliable across systems
-		_io.KeyCtrl = _io.KeysDown[(int)KeyCode::KEY_LEFT_CTRL] || _io.KeysDown[(int)KeyCode::KEY_RIGHT_CTRL];
-		_io.KeyShift = _io.KeysDown[(int)KeyCode::KEY_LEFT_SHIFT] || _io.KeysDown[(int)KeyCode::KEY_RIGHT_SHIFT];
-		_io.KeyAlt = _io.KeysDown[(int)KeyCode::KEY_LEFT_ALT] || _io.KeysDown[(int)KeyCode::KEY_RIGHT_ALT];
-		_io.KeySuper = _io.KeysDown[(int)KeyCode::KEY_HYPER];
-	};
-	e2->onKeyReleased = [](auto k, auto ev)
-	{
-		auto& _io = ImGui::GetIO();
-		_io.KeysDown[(int)k] = false;
-		// Modifiers are not reliable across systems
-		_io.KeyCtrl = _io.KeysDown[(int)KeyCode::KEY_LEFT_CTRL] || _io.KeysDown[(int)KeyCode::KEY_RIGHT_CTRL];
-		_io.KeyShift = _io.KeysDown[(int)KeyCode::KEY_LEFT_SHIFT] || _io.KeysDown[(int)KeyCode::KEY_RIGHT_SHIFT];
-		_io.KeyAlt = _io.KeysDown[(int)KeyCode::KEY_LEFT_ALT] || _io.KeysDown[(int)KeyCode::KEY_RIGHT_ALT];
-		_io.KeySuper = _io.KeysDown[(int)KeyCode::KEY_HYPER];
-	};
-	cocos2d::Director::getInstance()->getEventDispatcher()->addEventListenerWithFixedPriority(e2, 1);
+    #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+	    auto e = cocos2d::EventListenerMouse::create();
+	    e->onMouseDown = [](cocos2d::EventMouse* ev)
+	    {
+		    const auto b = (int)ev->getMouseButton();
+		    if (0 <= b && b < 5)
+			    g_MouseJustPressed[b] = true;
+	    };
+	    e->onMouseUp = [](cocos2d::EventMouse* ev)
+	    {
+		    const auto b = (int)ev->getMouseButton();
+		    if (0 <= b && b < 5)
+			    g_MouseJustPressed[b] = false;
+	    };
+	    e->onMouseMove = [frameSize](cocos2d::EventMouse* ev)
+	    {
+		    g_CursorPos.x = ev->getCursorX();
+		    g_CursorPos.y = frameSize.height - ev->getCursorY();
+	    };
+	    e->onMouseScroll = [frameSize](cocos2d::EventMouse* ev)
+	    {
+		    auto& _io = ImGui::GetIO();
+		    _io.MouseWheelH += (float)ev->getScrollX();
+		    _io.MouseWheel += frameSize.height - (float)ev->getScrollY();
+	    };
+	    cocos2d::Director::getInstance()->getEventDispatcher()->addEventListenerWithFixedPriority(e, 1);
+	    auto e2 = cocos2d::EventListenerKeyboard::create();
+	    using KeyCode = cocos2d::EventKeyboard::KeyCode;
+	    e2->onKeyPressed = [](auto k, auto ev)
+	    {
+		    auto& _io = ImGui::GetIO();
+		    _io.KeysDown[(int)k] = true;
+		    // Modifiers are not reliable across systems
+		    _io.KeyCtrl = _io.KeysDown[(int)KeyCode::KEY_LEFT_CTRL] || _io.KeysDown[(int)KeyCode::KEY_RIGHT_CTRL];
+		    _io.KeyShift = _io.KeysDown[(int)KeyCode::KEY_LEFT_SHIFT] || _io.KeysDown[(int)KeyCode::KEY_RIGHT_SHIFT];
+		    _io.KeyAlt = _io.KeysDown[(int)KeyCode::KEY_LEFT_ALT] || _io.KeysDown[(int)KeyCode::KEY_RIGHT_ALT];
+		    _io.KeySuper = _io.KeysDown[(int)KeyCode::KEY_HYPER];
+	    };
+	    e2->onKeyReleased = [](auto k, auto ev)
+	    {
+		    auto& _io = ImGui::GetIO();
+		    _io.KeysDown[(int)k] = false;
+		    // Modifiers are not reliable across systems
+		    _io.KeyCtrl = _io.KeysDown[(int)KeyCode::KEY_LEFT_CTRL] || _io.KeysDown[(int)KeyCode::KEY_RIGHT_CTRL];
+		    _io.KeyShift = _io.KeysDown[(int)KeyCode::KEY_LEFT_SHIFT] || _io.KeysDown[(int)KeyCode::KEY_RIGHT_SHIFT];
+		    _io.KeyAlt = _io.KeysDown[(int)KeyCode::KEY_LEFT_ALT] || _io.KeysDown[(int)KeyCode::KEY_RIGHT_ALT];
+		    _io.KeySuper = _io.KeysDown[(int)KeyCode::KEY_HYPER];
+	    };
+	    cocos2d::Director::getInstance()->getEventDispatcher()->addEventListenerWithFixedPriority(e2, 1);
+    #endif // #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
 #endif // CC_PLATFORM_PC
 	g_ClientApi = ClientApi_OpenGL;
     return true;
@@ -763,13 +765,13 @@ static void ImGui_ImplCocos2dx_UpdateMousePosAndButtons()
     {
         // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
         io.MouseDown[i] = g_MouseJustPressed[i] || glfwGetMouseButton(g_Window, i) != 0;
-        g_MouseJustPressed[i] = false;
+
     }
 
     // Update mouse position
     const ImVec2 mouse_pos_backup = io.MousePos;
     io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
-#ifdef __EMSCRIPTEN__
+#if __EMSCRIPTEN__ || (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
     const bool focused = true; // Emscripten
 #else
     const bool focused = glfwGetWindowAttrib(g_Window, GLFW_FOCUSED) != 0;
@@ -778,13 +780,21 @@ static void ImGui_ImplCocos2dx_UpdateMousePosAndButtons()
     {
         if (io.WantSetMousePos)
         {
-            glfwSetCursorPos(g_Window, (double)mouse_pos_backup.x, (double)mouse_pos_backup.y);
+            #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+            
+            #else
+                glfwSetCursorPos(g_Window, (double)mouse_pos_backup.x, (double)mouse_pos_backup.y);
+            #endif
         }
         else
         {
-            double mouse_x, mouse_y;
-            glfwGetCursorPos(g_Window, &mouse_x, &mouse_y);
-            io.MousePos = ImVec2((float)mouse_x, (float)mouse_y);
+            #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+                io.MousePos = g_CursorPos;
+            #else
+                double mouse_x, mouse_y;
+                glfwGetCursorPos(g_Window, &mouse_x, &mouse_y);
+                io.MousePos = ImVec2((float)mouse_x, (float)mouse_y);
+            #endif
         }
     }
 #else
