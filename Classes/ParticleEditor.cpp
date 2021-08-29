@@ -17,6 +17,11 @@
 #include "platform/CCImage.h"
 #include "renderer/CCTextureCache.h"
 
+#include <chrono>
+using std::chrono::duration_cast;
+using std::chrono::seconds;
+using std::chrono::steady_clock;
+
 std::unordered_map<std:: string, cocos2d::Image*>  ParticleEditor::imageCache;
 std::vector<ParticleEditor::ParticleSystemData> ParticleEditor::systemData;
 
@@ -93,7 +98,14 @@ void ParticleEditor::draw()
         // - reset
         if(ImGui::Button("Export", ImVec2{100,20}))
         {
-            serialize(systemData[currentIdx], "/Users/mehmeteminkacmaz/Desktop/");
+            cocos2d::FileUtils* fileUtils = cocos2d::FileUtils::getInstance();
+            
+            auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+            auto sec = milliseconds / 1000.0f;
+
+            //  C:/Users/$USER_NAME/AppData/Local/particle-editor/
+            std::string savePath = fileUtils->getWritablePath() + "particle_" + std::to_string(sec) + ".plist";
+            serialize(systemData[currentIdx], savePath );
         }
 
         if(ImGui::Button("Reset", ImVec2{100,20}))
