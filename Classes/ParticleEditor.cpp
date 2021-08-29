@@ -100,13 +100,13 @@ void ParticleEditor::draw()
         {
             resetCurrentParticleSystem();
         }
-        ImGui::End();
     }
+    ImGui::End();
 
     if(ImGui::Begin("SystemData")) {
         drawParticleSystemData(systemData[currentIdx]);
-        ImGui::End();
     }
+    ImGui::End();
 }
 
 void ParticleEditor::addParticleSystem(const std::string& path)
